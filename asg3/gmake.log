@@ -1,0 +1,5 @@
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/checksource main.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/cpplint.py.perl main.cpp
+Done processing main.cpp
+g++ -std=gnu++17 -g -O0 -fpermissive -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -c main.cpp
+g++ -std=gnu++17 -g -O0 -fpermissive -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -o keyvalue debug.o util.o main.o

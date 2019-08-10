@@ -1,0 +1,28 @@
+Eduardo Chavez
+echavez9@ucsc.edu
+Program 3: Templates and Iterators
+Due: August 1, 2018
+
+All base code taken from Mackey's directory from
+asg3-listmap-templates/code
+
+Included:
+- debug.h
+- debug.cpp
+- listmap.h
+- listmap.cpp
+- main.cpp
+- Makefile
+- README
+- util.h
+- util.cpp
+- util.tcc
+- xless.h
+- xpair.h
+
+The following files' internals from asg3-listmap-templates/misc were 
+copied into main.cpp (or used as reference):
+- catfile.cpp
+- testxless.cpp
+- testxlist.cpp
+- matchlines.cpp
