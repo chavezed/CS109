@@ -1,0 +1,31 @@
+gmake --no-print-directory dep
+g++ -std=gnu++17 -MM -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never ubigint.cpp bigint.cpp libfns.cpp scanner.cpp debug.cpp util.cpp main.cpp >>Makefile.dep
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/checksource ubigint.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/cpplint.py.perl ubigint.cpp
+Done processing ubigint.cpp
+g++ -std=gnu++17 -g -O0 -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -c ubigint.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/checksource bigint.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/cpplint.py.perl bigint.cpp
+Done processing bigint.cpp
+g++ -std=gnu++17 -g -O0 -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -c bigint.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/checksource libfns.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/cpplint.py.perl libfns.cpp
+Done processing libfns.cpp
+g++ -std=gnu++17 -g -O0 -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -c libfns.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/checksource scanner.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/cpplint.py.perl scanner.cpp
+Done processing scanner.cpp
+g++ -std=gnu++17 -g -O0 -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -c scanner.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/checksource debug.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/cpplint.py.perl debug.cpp
+Done processing debug.cpp
+g++ -std=gnu++17 -g -O0 -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -c debug.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/checksource util.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/cpplint.py.perl util.cpp
+Done processing util.cpp
+g++ -std=gnu++17 -g -O0 -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -c util.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/checksource main.cpp
+/afs/cats.ucsc.edu/courses/cmps109-wm/bin/cpplint.py.perl main.cpp
+Done processing main.cpp
+g++ -std=gnu++17 -g -O0 -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -c main.cpp
+g++ -std=gnu++17 -g -O0 -Wall -Wextra -Wold-style-cast -fdiagnostics-color=never -o ydc ubigint.o bigint.o libfns.o scanner.o debug.o util.o main.o
