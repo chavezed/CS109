@@ -1,0 +1,24 @@
+Script started on Fri 10 Aug 2018 03:30:19 AM PDT
+[?1034hbash-4.2$ ../cix localhost 8888
+cix(22213): starting
+cix(22213): unix2.lt.ucsc.edu (128.114.104.55)
+cix(22213): connecting to localhost port 8888
+cix(22213): connected to localhost (127.0.0.1) port 8888
+ls
+cix(22213): command ls
+cix(22213): sending header {0,4(LS),""}
+cix(22213): received header {231,8(LSOUT),""}
+cix(22213): received 231 bytes
+total 3
+-rw-r--r-- 1 echavez9 users   0 Aug 10 03:29 daemon.log1
+-rw-r--r-- 1 echavez9 users 516 Aug 10 03:26 localfile
+-rw-r--r-- 1 echavez9 users 644 Aug 10 03:26 localtto
+-rw------- 1 echavez9 users 858 Aug 10 02:44 server1file
+exit
+cix(22213): command exit
+cix(22213): caught cix_exit
+cix(22213): finishing
+bash-4.2$ exit
+exit
+
+Script done on Fri 10 Aug 2018 03:30:46 AM PDT

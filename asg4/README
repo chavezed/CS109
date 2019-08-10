@@ -1,0 +1,20 @@
+Eduardo Chavez
+echavez9@ucsc.edu
+Program 4: Client/Server and Sockets
+Due: August 9, 2018
+
+All base code taken from Mackey's directory from
+asg4-client-server/code
+
+Included:
+- cix.cpp
+- cixd.cpp
+- logstream.h
+- Makefile
+- protocol.cpp
+- protocol.h
+- sockets.cpp
+- sockets.h
+- README
+
+Code/examples from /misc and cplusplus.com used as reference.
