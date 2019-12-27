@@ -73,10 +73,8 @@ file_error::file_error (const string& what):
 size_t plain_file::size() const {
    size_t size {0};
    DEBUGF ('i', "size = " << size);
-   string temp;
-   for (unsigned int i = 0; i < data.size(); ++i) {
-      temp = data[i];
-      size += temp.length();
+   for (const string &s: data) {
+      size += s.length();
    }
    return size;
 }
@@ -88,7 +86,8 @@ const wordvec& plain_file::readfile() const {
 
 void plain_file::writefile (const wordvec& words) {
    DEBUGF ('i', words);
-   this->data = words;
+   data.clear();
+   data = words;
 }
 
 void plain_file::remove (const string&) {
@@ -103,7 +102,23 @@ inode_ptr plain_file::mkfile (const string&) {
    throw file_error ("is a plain file");
 }
 
-
+file_type plain_file::get_type() { 
+   return type;
+}
+
+map<string,inode_ptr>& plain_file::get_dirents() {
+   throw file_error ("is a plain file");
+ }
+
+void plain_file::print_dirents() {
+   throw file_error ("is a plain file");
+}
+
+
+
+// *************************************************************
+// here ye lies directory stuff
+
 size_t directory::size() const {
    size_t size {0};
    DEBUGF ('i', "size = " << size);
@@ -126,24 +141,28 @@ void directory::remove (const string& filename) {
 
 inode_ptr directory::mkdir (const string& dirname) {
    DEBUGF ('i', dirname);
-   return nullptr;
+   inode_ptr new_dir = 
+      make_shared<inode>(file_type::DIRECTORY_TYPE);
+   dirents.insert(pair<string, inode_ptr>(dirname, new_dir));
+   return new_dir;
 }
 
 inode_ptr directory::mkfile (const string& filename) {
    DEBUGF ('i', filename);
    
-   this->file_name = filename;
-   shared_ptr<inode> new_file = 
-                make_shared<inode>(file_type::PLAIN_TYPE);
-   this->dirents.insert(pair<string, inode_ptr>(file_name, new_file));
+   inode_ptr new_file = 
+      make_shared<inode>(file_type::PLAIN_TYPE);
+   dirents.insert(pair<string, inode_ptr>(filename, new_file));
    return new_file;
 }
 
-map<string,inode_ptr>& plain_file::get_dirents() {  }
+map<string,inode_ptr>& directory::get_dirents() { 
+   return dirents; 
+}
 
-map<string,inode_ptr>& directory::get_dirents() { return dirents; }
-
-void plain_file::print_dirents() {}
+file_type directory::get_type() { 
+   return type;
+}
 
 void directory::print_dirents() {
    map<string, inode_ptr>::iterator entry;

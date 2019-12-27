@@ -68,7 +68,6 @@ class inode {
       static int next_inode_nr;
       int inode_nr;
       base_file_ptr contents;
-      int size = 0;
       inode_ptr parent;
       string path;
    public:
@@ -133,9 +132,9 @@ class plain_file: public base_file {
       virtual void remove (const string& filename) override;
       virtual inode_ptr mkdir (const string& dirname) override;
       virtual inode_ptr mkfile (const string& filename) override;
-      virtual file_type get_type() { return type; }
-      virtual map<string,inode_ptr>& get_dirents();
-      virtual void print_dirents();
+      virtual file_type get_type() override;
+      virtual map<string,inode_ptr>& get_dirents() override;
+      virtual void print_dirents() override;
 };
 
 // class directory -
@@ -161,8 +160,6 @@ class directory: public base_file {
       // Must be a map, not unordered_map, so printing is lexicographic
       map<string,inode_ptr> dirents;
       file_type type = file_type::DIRECTORY_TYPE;
-      string file_name;
-      int dir_size = 0;
    public:
       virtual size_t size() const override;
       virtual const wordvec& readfile() const override;
@@ -170,9 +167,9 @@ class directory: public base_file {
       virtual void remove (const string& filename) override;
       virtual inode_ptr mkdir (const string& dirname) override;
       virtual inode_ptr mkfile (const string& filename) override;
-      virtual file_type get_type() { return type; }
-      virtual map<string,inode_ptr>& get_dirents();
-      virtual void print_dirents();
+      virtual file_type get_type() override;
+      virtual map<string,inode_ptr>& get_dirents() override;
+      virtual void print_dirents() override;
 };
 
 #endif

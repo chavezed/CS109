@@ -16,7 +16,6 @@ command_hash cmd_hash {
    {"prompt", fn_prompt},
    {"pwd"   , fn_pwd   },
    {"rm"    , fn_rm    },
-   {"#"     , fn_cmt   },
 };
 
 command_fn find_command_fn (const string& cmd) {
@@ -122,14 +121,8 @@ void fn_make (inode_state& state, const wordvec& words){
    string data_str = "";
    wordvec data_vec;
    for (unsigned int i = 2; i < words.size(); ++i) {
-      if (i == words.size() - 1) {
-         data_str += words[i];
-      }
-      else {
-         data_str += words[i] + " ";
-      }
+      data_vec.push_back(words[i]);
    }
-   data_vec.push_back(data_str);
    curr_wd = curr_wd->get_base()->mkfile(filename);
    curr_wd->get_base()->writefile(data_vec);
 }
@@ -177,8 +170,4 @@ void fn_rm (inode_state& state, const wordvec& words){
 void fn_rmr (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
-}
-
-void fn_cmt (inode_state& state, const wordvec& words){
-   
 }
