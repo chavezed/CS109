@@ -51,6 +51,8 @@ class inode_state {
       void pop_path () { path.pop_back(); }
       void reset_path ();
       bool is_root(inode_ptr node) {return node == root; }
+      wordvec get_path() { return path; }
+      void set_path (wordvec &new_path);
 };
 
 // class inode -
@@ -75,14 +77,17 @@ class inode {
       inode_ptr parent;
       //string dirname;
    public:
+      //inode (const inode_state&, file_type);
       inode (file_type);
       int get_inode_nr() const; 
-      inode_ptr& get_root (inode_state& state){return state.get_root();}
-      inode_ptr& get_cwd (inode_state& state){return state.get_cwd();}
+      inode_ptr get_root (inode_state& state){return state.get_root();}
+      inode_ptr get_cwd (inode_state& state){return state.get_cwd();}
       base_file_ptr get_base() { return contents; }
       inode_ptr& get_parent() { return parent; }
       void set_parent (inode_ptr new_parent) { parent = new_parent; }
       void print_path(inode_state &state);
+      void print_path(wordvec &words);
+      //void set_dirname(const string &dir_name);
 };
 
 

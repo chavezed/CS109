@@ -30,6 +30,7 @@ inode_state::inode_state() {
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
 
+   path.push_back("/");
    root = make_shared<inode>(file_type::DIRECTORY_TYPE);
    cwd = root;
    //root->get_path() = "/"; // need to remove this
@@ -37,7 +38,6 @@ inode_state::inode_state() {
             pair<string, inode_ptr>(".", root));
    root->get_base()->get_dirents().insert(
             pair<string, inode_ptr>("..", root));
-   path.push_back("/");
    root->set_parent(root);
 }
 
@@ -50,13 +50,18 @@ void inode_state::reset_path () {
    path.push_back("/");
 }
 
+void inode_state::set_path(wordvec &new_path) {
+   path.clear();
+   path = new_path;
+}
+
 ostream& operator<< (ostream& out, const inode_state& state) {
    out << "inode_state: root = " << state.root
        << ", cwd = " << state.cwd;
    return out;
 }
 
-inode::inode(file_type type): inode_nr (next_inode_nr++) {
+inode::inode (file_type type): inode_nr (next_inode_nr++) {
    switch (type) {
       case file_type::PLAIN_TYPE:
            contents = make_shared<plain_file>();
@@ -65,6 +70,15 @@ inode::inode(file_type type): inode_nr (next_inode_nr++) {
            contents = make_shared<directory>();
            break;
    }
+   // string dir_name = "";
+   // for (size_t i = 0; i < state.path.size(); ++i) {
+   //    if (i > 1) {
+   //       dir_name += "/" + state.path[i];
+   //    } else {
+   //       dir_name += state.path[i];
+   //    }
+   // }
+   //dirname = dir_name;
    DEBUGF ('i', "inode " << inode_nr << ", type = " << type);
 }
 
@@ -82,6 +96,21 @@ int inode::get_inode_nr() const {
       }
    }
 }
+
+void inode::print_path(wordvec &words) {
+   for (size_t i = 0; i < words.size(); ++i) {
+      if (i > 1) { // to ignore first / and first dir name
+         cout << "/" << words[i];
+      } else {
+         cout << words[i];
+      }
+   }
+}
+
+
+// void inode::set_dirname(const string &dir_name) {
+//    dirname = dir_name;
+// }
 file_error::file_error (const string& what):
             runtime_error (what) {
 }
@@ -161,8 +190,13 @@ void directory::remove (const string& filename) {
 
 inode_ptr directory::mkdir (const string& dirname) {
    DEBUGF ('i', dirname);
-   inode_ptr new_dir = 
-      make_shared<inode>(file_type::DIRECTORY_TYPE);
+
+   inode_ptr new_dir = nullptr;
+
+   map<string, inode_ptr>::iterator it = dirents.find(dirname);
+   if (it != dirents.end()) return new_dir;
+
+   new_dir = make_shared<inode>(file_type::DIRECTORY_TYPE);
    dirents.insert(pair<string, inode_ptr>(dirname, new_dir));
    return new_dir;
 }
@@ -170,8 +204,17 @@ inode_ptr directory::mkdir (const string& dirname) {
 inode_ptr directory::mkfile (const string& filename) {
    DEBUGF ('i', filename);
    
-   inode_ptr new_file = 
-      make_shared<inode>(file_type::PLAIN_TYPE);
+   inode_ptr new_file = nullptr;
+   map<string, inode_ptr>::iterator it = dirents.find(filename);
+   if (it != dirents.end() and 
+      it->second->get_base()->get_type() == file_type::DIRECTORY_TYPE) {
+      return new_file;
+   } else if (it != dirents.end()) {
+      new_file = it->second;
+      return new_file;
+   }
+
+   new_file = make_shared<inode>(file_type::PLAIN_TYPE);
    dirents.insert(pair<string, inode_ptr>(filename, new_file));
    return new_file;
 }
@@ -187,17 +230,19 @@ file_type directory::get_type() {
 void directory::print_dirents() {
    map<string, inode_ptr>::iterator entry;
    for (entry = dirents.begin(); entry != dirents.end(); ++entry) {
-
+      string slash = "";
+      if (entry->second->get_base()->get_type() == 
+         file_type::DIRECTORY_TYPE
+         and entry->first != "." and entry->first != ".." ) {
+         slash = "/";
+      }
       cout << setw(6) << right << entry->second->get_inode_nr();
       cout << "  ";
       cout << setw(6) << right << entry->second->get_base()->size();
       cout << "  ";
-      cout << setw(15) << left << entry->first;
-      if (entry->second->get_base()->get_type() == 
-         file_type::DIRECTORY_TYPE
-         and entry->first != "." and entry->first != ".." ) {
-         cout << "/";
-      }
+      string name = entry->first + slash;
+      //cout << setw(15) << left << entry->first << slash;
+      cout << setw(15) << left << name;
       cout << endl;
    }
 }
