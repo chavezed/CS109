@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <unordered_map>
+#include <iomanip>
 
 using namespace std;
 
@@ -29,18 +30,25 @@ inode_state::inode_state() {
    DEBUGF ('i', "root = " << root << ", cwd = " << cwd
           << ", prompt = \"" << prompt() << "\"");
 
-   this->root = make_shared<inode>(file_type::DIRECTORY_TYPE);
-   this->cwd = root;
-   this->root->get_path() = "/";
-   this->root->get_base()->get_dirents().insert(
+   root = make_shared<inode>(file_type::DIRECTORY_TYPE);
+   cwd = root;
+   //root->get_path() = "/"; // need to remove this
+   root->get_base()->get_dirents().insert(
             pair<string, inode_ptr>(".", root));
-   this->root->get_base()->get_dirents().insert(
+   root->get_base()->get_dirents().insert(
             pair<string, inode_ptr>("..", root));
-   this->path.push_back("/");
-   this->root->set_parent(this->root);
+   path.push_back("/");
+   root->set_parent(root);
 }
 
-const string& inode_state::prompt() const { return prompt_; }
+const string& inode_state::prompt() const { 
+   return prompt_; 
+}
+
+void inode_state::reset_path () {
+   path.clear();
+   path.push_back("/");
+}
 
 ostream& operator<< (ostream& out, const inode_state& state) {
    out << "inode_state: root = " << state.root
@@ -65,17 +73,26 @@ int inode::get_inode_nr() const {
    return inode_nr;
 }
 
-
+void inode::print_path(inode_state &state) {
+   for (size_t i = 0; i < state.path.size(); ++i) {
+      if (i > 1) { // to ignore first / and first dir name
+         cout << "/" << state.path[i];
+      } else {
+         cout << state.path[i];
+      }
+   }
+}
 file_error::file_error (const string& what):
             runtime_error (what) {
 }
 
 size_t plain_file::size() const {
    size_t size {0};
-   DEBUGF ('i', "size = " << size);
+   size += data.size() - 1;
    for (const string &s: data) {
-      size += s.length();
+      size += s.length(); 
    }
+   DEBUGF ('i', "size = " << size);
    return size;
 }
 
@@ -114,6 +131,9 @@ void plain_file::print_dirents() {
    throw file_error ("is a plain file");
 }
 
+inode_ptr plain_file::get_mapped_inode_ptr(const string &) {
+   throw file_error ("is a plain file");
+}
 
 
 // *************************************************************
@@ -167,17 +187,25 @@ file_type directory::get_type() {
 void directory::print_dirents() {
    map<string, inode_ptr>::iterator entry;
    for (entry = dirents.begin(); entry != dirents.end(); ++entry) {
+
+      cout << setw(6) << right << entry->second->get_inode_nr();
+      cout << "  ";
+      cout << setw(6) << right << entry->second->get_base()->size();
+      cout << "  ";
+      cout << setw(15) << left << entry->first;
       if (entry->second->get_base()->get_type() == 
          file_type::DIRECTORY_TYPE
          and entry->first != "." and entry->first != ".." ) {
-         cout << entry->second->get_inode_nr() << "   "    
-              << entry->second->get_base()->size() << "   "
-              << entry->first + "/" << endl;
+         cout << "/";
       }
-      else {
-         cout << entry->second->get_inode_nr() << "   "    
-              << entry->second->get_base()->size() << "   "
-              << entry->first << endl;
-      }
+      cout << endl;
    }
+}
+
+inode_ptr directory::get_mapped_inode_ptr(const string &name) {
+   inode_ptr res = nullptr;
+   if (dirents.count(name)) {
+      res = dirents.find(name)->second;
+   }
+   return res;
 }

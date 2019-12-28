@@ -46,7 +46,11 @@ class inode_state {
       inode_ptr& get_root() { return root; }
       inode_ptr& get_cwd() { return cwd; }
       void set_prompt (string new_prompt) { prompt_ = new_prompt; }
-      // fx to set/get path 
+      void set_cwd(inode_ptr new_cwd) { cwd = new_cwd; }
+      void push_path (const string &to) { path.push_back(to); }
+      void pop_path () { path.pop_back(); }
+      void reset_path ();
+      bool is_root(inode_ptr node) {return node == root; }
 };
 
 // class inode -
@@ -69,7 +73,7 @@ class inode {
       int inode_nr;
       base_file_ptr contents;
       inode_ptr parent;
-      string path;
+      //string dirname;
    public:
       inode (file_type);
       int get_inode_nr() const; 
@@ -78,9 +82,7 @@ class inode {
       base_file_ptr get_base() { return contents; }
       inode_ptr& get_parent() { return parent; }
       void set_parent (inode_ptr new_parent) { parent = new_parent; }
-      void print_path() { cout << path << endl; }
-      string& get_path() { return path; }
-      string dirname;
+      void print_path(inode_state &state);
 };
 
 
@@ -110,6 +112,7 @@ class base_file {
       virtual file_type get_type() = 0;
       virtual map<string,inode_ptr>& get_dirents() = 0;
       virtual void print_dirents() = 0;
+      virtual inode_ptr get_mapped_inode_ptr(const string &name) = 0;
 };
 
 // class plain_file -
@@ -135,6 +138,7 @@ class plain_file: public base_file {
       virtual file_type get_type() override;
       virtual map<string,inode_ptr>& get_dirents() override;
       virtual void print_dirents() override;
+      virtual inode_ptr get_mapped_inode_ptr(const string &name) override;
 };
 
 // class directory -
@@ -170,6 +174,7 @@ class directory: public base_file {
       virtual file_type get_type() override;
       virtual map<string,inode_ptr>& get_dirents() override;
       virtual void print_dirents() override;
+      virtual inode_ptr get_mapped_inode_ptr(const string &name) override;
 };
 
 #endif
