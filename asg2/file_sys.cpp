@@ -186,6 +186,22 @@ void directory::writefile (const wordvec&) {
 
 void directory::remove (const string& filename) {
    DEBUGF ('i', filename);
+
+   map<string, inode_ptr>::iterator it = dirents.find(filename);
+   // errors: file doesn't exist or trying to delete non empty directory
+   if (it == dirents.end()) {
+      cerr << "remove: File/Directory " << filename << " does not exist.\n";
+      exit_status::set(1);
+      return;
+   } else if (it->second->get_base()->get_type() == file_type::DIRECTORY_TYPE
+      and it->second->get_base()->size() > 2) {
+      cerr << "remove: Cannot delete non-empty directory.\n";
+      exit_status::set(1);
+      return;
+   }
+
+   it->second = nullptr;
+   dirents.erase(it);
 }
 
 inode_ptr directory::mkdir (const string& dirname) {
@@ -206,6 +222,7 @@ inode_ptr directory::mkfile (const string& filename) {
    
    inode_ptr new_file = nullptr;
    map<string, inode_ptr>::iterator it = dirents.find(filename);
+
    if (it != dirents.end() and 
       it->second->get_base()->get_type() == file_type::DIRECTORY_TYPE) {
       return new_file;

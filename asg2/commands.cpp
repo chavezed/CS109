@@ -244,7 +244,15 @@ void fn_rm (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
 
-
+   if (words.size() < 2) {
+      cerr << "rm: No filename to delete given.\n";
+      exit_status::set(1);
+      return;
+   }
+   string filename = words[1];
+   inode_ptr curr = state.get_cwd();
+   
+   curr->get_base()->remove(filename);
 }
 
 void fn_rmr (inode_state& state, const wordvec& words){
