@@ -124,9 +124,7 @@ void fn_ls (inode_state& state, const wordvec& words){
    inode_ptr curr_wd = state.get_cwd();
    wordvec cwd_path = state.get_path();
 
-   if (words.size() == 1) {
-      // print the current directory
-   } else if (words.size() == 2) {
+   if (words.size() == 2) {
       string pathnames = words[1];
       if (pathnames == "/") {
          curr_wd = state.get_root();
@@ -156,9 +154,58 @@ void fn_ls (inode_state& state, const wordvec& words){
    curr_wd->get_base()->print_dirents();
 }
 
+void lsr_helper(inode_ptr curr, wordvec &curr_path) {
+   curr->print_path(curr_path);
+   cout << ":" << endl;
+   curr->get_base()->print_dirents();
+
+   if (curr->get_base()->size() == 2) return;
+
+   map<string,inode_ptr>::iterator it = 
+      curr->get_base()->get_dirents().begin();
+   for (; it != curr->get_base()->get_dirents().end(); ++it) {
+      if (it->first == "." or it->first == "..") continue;
+      if (it->second->get_base()->get_type() == file_type::DIRECTORY_TYPE) {
+         curr_path.push_back(it->first);
+         lsr_helper (it->second, curr_path);
+         curr_path.pop_back();
+      }
+   }
+}
+
 void fn_lsr (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+
+   inode_ptr curr_wd = state.get_cwd();
+   wordvec cwd_path = state.get_path();
+
+   if (words.size() == 2) {
+      string pathnames = words[1];
+      if (pathnames == "/") {
+         curr_wd = state.get_root();
+         cwd_path.clear();
+         cwd_path.push_back("/");
+      } else {
+         wordvec paths = split(pathnames, "/");
+         for (const string &path : paths) {
+               if (path == ".") continue;
+               inode_ptr to = curr_wd->get_base()->get_mapped_inode_ptr(path);
+               if (to == nullptr) {
+                  cerr << "lsr: Invalid path.\n";
+                  exit_status::set(1);
+                  return;
+               }
+               if (path == ".." and not state.is_root(curr_wd)) {
+                  cwd_path.pop_back();
+               } else if (path != "..") {
+                  cwd_path.push_back(path);
+               }
+               curr_wd = to;
+         }
+      }
+   }
+   lsr_helper(curr_wd, cwd_path);
 }
 
 void fn_make (inode_state& state, const wordvec& words){
@@ -172,6 +219,13 @@ void fn_make (inode_state& state, const wordvec& words){
    }
    string filename = words[1];
    inode_ptr curr_wd = state.get_cwd();
+
+   // pathname given for the name of the file
+   if (words[1] == "/" or split(words[1], "/").size() > 1) {
+      cerr << "make: Pathname cannot be used for the file's name.\n";
+      exit_status::set(1);
+      return;
+   }
 
    curr_wd = curr_wd->get_base()->mkfile(filename);
    if (curr_wd == nullptr) {
@@ -199,6 +253,26 @@ void fn_mkdir (inode_state& state, const wordvec& words){
 
    inode_ptr curr_wd = state.get_cwd();
    string dirname = words[1];
+
+   wordvec paths = split(dirname, "/");
+   if (dirname == "/") {
+      cerr << "mkdir: Cannot create directory same as root name\n";
+      exit_status::set(1);
+      return;
+   } else if (paths.size() > 1) {
+      dirname = paths.back();
+      for (size_t i = 0; i < paths.size() - 1; ++i) {
+         inode_ptr to = curr_wd->get_base()->get_mapped_inode_ptr(paths[i]);
+         if (to == nullptr or
+            (to != nullptr and to->get_base()->get_type() == file_type::PLAIN_TYPE)) {
+               cerr << "mkdir: Invalid path given.\n";
+               exit_status::set(1);
+               return;
+         }
+         curr_wd = to;
+      }
+   }
+
    inode_ptr new_dir = curr_wd->get_base()->mkdir(dirname);
    if (new_dir == nullptr) {
       cerr << "mkdir: Cannot create directory since " << words[1] 
