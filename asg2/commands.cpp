@@ -16,6 +16,7 @@ command_hash cmd_hash {
    {"prompt", fn_prompt},
    {"pwd"   , fn_pwd   },
    {"rm"    , fn_rm    },
+   {"rmr"   , fn_rmr   }
 };
 
 command_fn find_command_fn (const string& cmd) {
@@ -114,6 +115,23 @@ void fn_echo (inode_state& state, const wordvec& words){
 void fn_exit (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+
+   if (words.size() == 1) {
+      exit_status::set(0);
+   } else if (words.size() == 2) {
+      int num = 0;
+      bool invalid_found = false;
+      for (const char &c : words[1]) {
+         if (isalpha(c)) {
+            exit_status::set(127);
+            invalid_found = true;
+            break;
+         }
+         num = num * 10 + (c - '0');
+      }
+      if (not invalid_found) exit_status::set(num);
+   }
+
    throw ysh_exit();
 }
 
@@ -227,6 +245,12 @@ void fn_make (inode_state& state, const wordvec& words){
       return;
    }
 
+   if (words.size() == 2) {
+      cerr << "make: No contents given.\n";
+      exit_status::set(1);
+      return;
+   }
+
    curr_wd = curr_wd->get_base()->mkfile(filename);
    if (curr_wd == nullptr) {
       cerr << "make: Cannot create file with same name as a directory.\n";
@@ -325,11 +349,91 @@ void fn_rm (inode_state& state, const wordvec& words){
    }
    string filename = words[1];
    inode_ptr curr = state.get_cwd();
+
+   if (filename == "." or filename == "..") {
+      cerr << "rm: Cannot delete '.' or '..' .\n";
+      exit_status::set(1);
+      return;
+   }
    
    curr->get_base()->remove(filename);
+}
+
+void rmr_helper(inode_ptr curr) {
+   if (curr->get_base()->size() == 2) {
+      return;
+   }
+
+   map<string,inode_ptr>::iterator it = 
+      curr->get_base()->get_dirents().begin();
+   
+   while (it != curr->get_base()->get_dirents().end()) {
+      if (it->first == "." or it->first == "..") {
+         ++it;
+      } else if (it->second->get_base()->get_type() ==
+                 file_type::PLAIN_TYPE) {
+         string to_del = it->first;
+         ++it;
+         curr->get_base()->remove(to_del);
+      } else if (it->second->get_base()->get_type() ==
+                 file_type::DIRECTORY_TYPE) {
+         rmr_helper(it->second);
+         string to_del = it->first;
+         ++it;
+         curr->get_base()->remove(to_del);
+      }
+   }
 }
 
 void fn_rmr (inode_state& state, const wordvec& words){
    DEBUGF ('c', state);
    DEBUGF ('c', words);
+
+   if ((words.size() == 1 and state.is_root(state.get_cwd())) or
+       (words.size() == 2 and words[1] == "/")) {
+      cerr << "rmr: Cannot rmr from root.\n";
+      exit_status::set(1);
+      return;
+   }
+
+   inode_ptr curr_wd = state.get_cwd();
+   wordvec cwd_path = state.get_path();
+
+   if (words.size() > 1) {
+      wordvec paths = split(words[1], "/");
+      for (const string &path : paths) {
+            if (path == ".") continue;
+            inode_ptr to = curr_wd->get_base()->get_mapped_inode_ptr(path);
+            if (to == nullptr or
+               (to != nullptr and to->get_base()->get_type() == file_type::PLAIN_TYPE)) {
+               cerr << "rmr: Invalid path.\n";
+               exit_status::set(1);
+               return;
+            }
+            if (path == ".." and not state.is_root(curr_wd)) {
+                  cwd_path.pop_back();
+               } else if (path != "..") {
+                  cwd_path.push_back(path);
+               }
+            curr_wd = to;
+      }
+   }
+   if (state.is_root(curr_wd)) {
+      cerr << "rmr: Cannot rmr from root.\n";
+      exit_status::set(1);
+      return;
+   }
+
+   inode_ptr parent = curr_wd->get_base()->get_mapped_inode_ptr("..");
+
+   rmr_helper(curr_wd);
+   
+   string to_del = cwd_path.back();
+
+   parent->get_base()->remove(to_del);
+
+   if (curr_wd == state.get_cwd()) {
+      state.set_cwd(parent);
+      state.pop_path();
+   }
 }
